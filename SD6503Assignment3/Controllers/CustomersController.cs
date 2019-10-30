@@ -19,9 +19,22 @@ namespace SD6503Assignment3.Controllers
         }
 
         // GET: Customers
-        public async Task<IActionResult> Index()
+    /*    public async Task<IActionResult> Index()
         {
             return View(await _context.Customer.ToListAsync());
+        }*/
+
+        public async Task<IActionResult> Index(string searchString)
+        {
+            var customer = from m in _context.Customer
+                         select m;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                customer = customer.Where(s => s.Name.Contains(searchString));
+            }
+
+            return View(await customer.ToListAsync());
         }
 
         // GET: Customers/Details/5

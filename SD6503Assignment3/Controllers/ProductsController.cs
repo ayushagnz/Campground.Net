@@ -19,9 +19,33 @@ namespace SD6503Assignment3.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string productCategory, string searchString)
         {
-            return View(await _context.Product.ToListAsync());
+            // Use LINQ to get list of genres.
+            IQueryable<string> genreQuery = from m in _context.Product
+                                            orderby m.Category
+                                            select m.Category;
+
+            var products = from m in _context.Product
+                         select m;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                products = products.Where(s => s.ProductName.Contains(searchString));
+            }
+
+            if (!string.IsNullOrEmpty(productCategory))
+            {
+                products = products.Where(x => x.Category == productCategory);
+            }
+
+            var productCategoryVM = new ProductCategoryViewModel
+            {
+                Categories = new SelectList(await genreQuery.Distinct().ToListAsync()),
+                Products = await products.ToListAsync()
+            };
+
+            return View(productCategoryVM);
         }
 
         // GET: Products/Details/5
@@ -53,7 +77,7 @@ namespace SD6503Assignment3.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,ProductName,Description,Price,Rating")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,ProductName,Description,Price,Rating, Category")] Product product)
         {
             if (ModelState.IsValid)
             {
@@ -85,7 +109,7 @@ namespace SD6503Assignment3.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("ProductId,ProductName,Description,Price,Rating")] Product product)
+        public async Task<IActionResult> Edit(string id, [Bind("ProductId,ProductName,Description,Price,Rating, Category")] Product product)
         {
             if (id != product.ProductId)
             {
